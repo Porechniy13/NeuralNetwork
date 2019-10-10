@@ -1,50 +1,41 @@
 import numpy as np
+import math
+import random
 
-class Neuron:
-	def __init__(self):
-		self.weight = []
+def sigmoid(x):
+	return 1 / (1 + math.exp(-x))
 	
-	def initWeight(self, count):
-		for i in range(count):
-			self.weight[i] = random()
-	
-	def setInputValue(self, input):
-		self.input = input
-	
-	def activationFunction(self, func):
-		self.output = func(self.input)
-
-class Layer: 
-	def __init__(self, neuronCount):
-		self.size = neuronCount
-		self.neuronList = []
-		for i in range(self.size):
-			self.neuronList[i] = Neuron() 
-	
-	def setInputValue(self, inputValueArray):
-		for i in range(0, self.size):
-			self.neuronList[i].setInputValue(inputValueArray[i])
+def d_sigmoid(x):
+	return sigmoid(x) * (1 - sigmoid(x))
 
 class Network:
-	def __init__(self, counter, neuronCount):
-		self.Layers = []
-		self.size = counter
-		for i in range(self.size):
-			self.Layers[i] = Layer(neuronCount[i])
+	def __init__(self, inputSet, y):
+		self.input = inputSet
+		self.firstWeights = np.random.rand(self.input.shape[1], 4)
+		self.secondWeights = np.random.rand(4,1)
+		self.outputLayer = y
+		self.output = np.zeros(self.outputLayer.shape)
+		
+	def feedForward(self):
+		self.firstLayer = sigmoid(np.dot(self.input, self.firstWeights))
+		self.output = sigmoid(np.dot(self.firstLayer, self.secondWeights))
 	
-	def networkInit():
-		for i in range(self.size):
-			for j in range(0,self.Layers[i].size-1):
-				self.Layers[i].neuronList[j].initWeigth(self.Layers[i+1].size)			
+	def backLoss(self):
+		d_firstWeights = np.dot(self.firstLayer.T, (2*(self.outputLayer - self.output) * d_sigmoid(self.output)))
+		d_secondWeights = np.dot(self.input.T, (np.dot(2*(self.outputLayer - self.output) * d_sigmoid(self.output), self.secondWeights.T) * d_sigmoid(self.firstLayer)))
+		
+		self.firstWeights += d_firstWeights
+		self.secondWeights += d_secondWeights
 	
-	def printNetwork():
-		for i in range(self.size):
-			for j in range(self.Layers[i].size):
-				print(self.Layers[i].neuronList[j].weight)
 	
 if __name__ == ("__main__"):
-	neuronsCounter = [4,5,1]
-	myNetwork = Network(len(neuronsCounter), neuronsCounter)
-	myNetwork.networkInit()
-	myNetwork.printNetwork()
+	trainSet = np.array([[0,0],[0,1],[1,0],[1,1]])
+	result = np.array([0,1,1,0])
+	myNetwork = Network(trainSet, result)
+	for i in range(100):
+		myNetwork.feedForward()
+		myNetwork.backLoss()
+	
+	print(myNetwork.output)
+	
 	
